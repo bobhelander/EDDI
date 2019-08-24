@@ -3414,7 +3414,7 @@ namespace EddiJournalMonitor
                                 {
                                     string systemName = JsonParsing.getString(data, "Name");
                                     long systemAddress = JsonParsing.getLong(data, "SystemAddress");
-                                    int remainingJumpsInRoute = JsonParsing.getInt(data, "RemainingJumpsInRoute");
+                                    int remainingJumpsInRoute = JsonParsing.getOptionalInt(data, "RemainingJumpsInRoute") ?? 0;
                                     events.Add(new FSDTargetEvent(timestamp, systemName, systemAddress, remainingJumpsInRoute) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
