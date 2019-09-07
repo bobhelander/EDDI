@@ -68,6 +68,8 @@
     <Compile Include="CommanderReputationEvent.cs" />
     <Compile Include="PowerplayEvent.cs" />
     <Compile Include="CommanderLoadingEvent.cs" />
+    <Compile Include="JoystickActionEvent.cs" />
+    <Compile Include="JoystickCommandEvent.cs" />
     <Compile Include="RingMappedEvent.cs" />
     <Compile Include="BodyMappedEvent.cs" />
     <Compile Include="CargoDepotEvent.cs" />
