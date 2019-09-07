@@ -412,6 +412,12 @@ namespace EddiVoiceAttackResponder
                     case "setspeechresponderpersonality":
                         InvokeSetSpeechResponderPersonality(ref vaProxy);
                         break;
+                    case "JoystickCommand":
+                        InvokeJoystickCommand(ref vaProxy);
+                        break;
+                    case "JoystickAction":
+                        InvokeJoystickAction(ref vaProxy);
+                        break;
                     case "jumpdetails":
                         InvokeJumpDetails(ref vaProxy);
                         break;
@@ -1142,5 +1148,62 @@ namespace EddiVoiceAttackResponder
                 setStatus(ref vaProxy, "Failed to get missions route", e);
             }
         }
+
+        public static void InvokeJoystickCommand(ref dynamic vaProxy)
+        {
+            try
+            {
+                string command = vaProxy.GetText("JoystickCommand");
+                if (string.IsNullOrEmpty(command))
+                {
+                    Logging.Info("No value in the VoiceAttack text variable 'JoystickCommand'; nothing to execute");
+                    return;
+                }
+
+                var joystick = EDDI.Instance.ObtainResponder("Joystick Responder");
+                joystick?.Handle(new JoystickCommandEvent(DateTime.Now, command));
+
+                vaProxy.WriteToLog($"Joystick Message: {command}");
+            }
+            catch (Exception e)
+            {
+                setStatus(ref vaProxy, "Failed to execute command", e);
+            }
+        }
+
+        public static void InvokeJoystickAction(ref dynamic vaProxy)
+        {
+            try
+            {
+                string command = vaProxy.GetText("JoystickAction");
+
+                string variable1 = vaProxy.GetText("var1");
+                string variable2 = vaProxy.GetText("var2");
+                string variable3 = vaProxy.GetText("var3");
+
+                if (string.IsNullOrEmpty(command))
+                {
+                    Logging.Info("No value in the VoiceAttack text variable 'JoystickAction'; nothing to execute");
+                    return;
+                }
+
+                var joystick = EDDI.Instance.ObtainResponder("Joystick Responder");
+                var joystickActionEvent = new JoystickActionEvent(DateTime.Now, command)
+                {
+                    var1 = variable1,
+                    var2 = variable2,
+                    var3 = variable3
+                };
+
+                joystick?.Handle(joystickActionEvent);
+
+                vaProxy.WriteToLog($"Joystick Message: {command}");
+            }
+            catch (Exception e)
+            {
+                setStatus(ref vaProxy, "Failed to execute command", e);
+            }
+        }
+
     }
 }
