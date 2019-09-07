@@ -1125,7 +1125,7 @@ namespace EddiVoiceAttackResponder
                 }
 
                 var joystick = EDDI.Instance.ObtainResponder("Joystick Responder");
-                joystick?.Handle(new JoystickCommandEvent(DateTime.Now, command));
+                joystick?.Handle(new EddiJoystickResponder.JoystickCommandEvent(DateTime.Now, command));
 
                 vaProxy.WriteToLog($"Joystick Message: {command}");
             }
@@ -1152,7 +1152,7 @@ namespace EddiVoiceAttackResponder
                 }
 
                 var joystick = EDDI.Instance.ObtainResponder("Joystick Responder");
-                var joystickActionEvent = new JoystickActionEvent(DateTime.Now, command)
+                var joystickActionEvent = new EddiJoystickResponder.JoystickActionEvent(DateTime.Now, command)
                 {
                     var1 = variable1,
                     var2 = variable2,
