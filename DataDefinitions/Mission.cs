@@ -38,6 +38,7 @@ namespace EddiDataDefinitions
             "collect",
             "collectwing",
             "disable",
+            "disablewing",
             "genericpermit1",
             "hack",
             "longdistanceexpedition",
@@ -45,6 +46,7 @@ namespace EddiDataDefinitions
             "massacrethargoid",
             "massacrewing",
             "mining",
+            "miningwing",
             "piracy",
             "rescue",
             "salvage",
@@ -217,7 +219,7 @@ namespace EddiDataDefinitions
 
         public DateTime? expiry { get; set; }
         [JsonIgnore]
-        public long? expiryseconds => (long?)expiry?.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+        public long? expiryseconds => expiry != null ? (long?)Utilities.Dates.fromDateTimeToSeconds((DateTime)expiry) : null;
         [JsonIgnore]
         public bool expiring { get; set; }
 

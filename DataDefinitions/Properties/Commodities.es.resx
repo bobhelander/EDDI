@@ -1670,4 +1670,24 @@
     <value>Materia Biológica Zargoide</value>
     <comment>Commodity UnknownBiologicalMatter</comment>
   </data>
+  <data name="RockforthFertiliser" xml:space="preserve">
+    <value>Fertilizantes Rockforth</value>
+    <comment>Commodity RockforthFertiliser</comment>
+  </data>
+  <data name="agronomictreatment" xml:space="preserve">
+    <value>Tratamiento agronómico</value>
+    <comment>Commodity agronomictreatment</comment>
+  </data>
+  <data name="BakedGreebles" xml:space="preserve">
+    <value>Greebles al horno</value>
+    <comment>Commodity BakedGreebles</comment>
+  </data>
+  <data name="Advert1" xml:space="preserve">
+    <value>Prototipos de Procesadores Ultra-Compactos</value>
+    <comment>Commodity Ultra-Compact Processor Prototypes</comment>
+  </data>
+  <data name="AnimalEffigies" xml:space="preserve">
+    <value>Aliento Cromado de Plata</value>
+    <comment>Commodity Crom Silver Fesh</comment>
+  </data>
 </root>

@@ -53,11 +53,6 @@ namespace EddiShipMonitor
             return Properties.ShipMonitor.name;
         }
 
-        public string MonitorVersion()
-        {
-            return "1.0.0";
-        }
-
         public string MonitorDescription()
         {
             return Properties.ShipMonitor.desc;
@@ -76,7 +71,7 @@ namespace EddiShipMonitor
             BindingOperations.CollectionRegistering += Shipyard_CollectionRegistering;
 
             readShips();
-            Logging.Info("Initialised " + MonitorName() + " " + MonitorVersion());
+            Logging.Info($"Initialized {MonitorName()}");
         }
 
         private void Shipyard_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
@@ -110,7 +105,7 @@ namespace EddiShipMonitor
         public void Reload()
         {
             readShips();
-            Logging.Info("Reloaded " + MonitorName() + " " + MonitorVersion());
+            Logging.Info($"Reloaded {MonitorName()}");
         }
 
         public UserControl ConfigurationTabItem()
@@ -1028,10 +1023,9 @@ namespace EddiShipMonitor
 
         private void posthandleShipLoadoutEvent(ShipLoadoutEvent @event)
         {
-            if (@event.timestamp > updatedAt)
+            if (!@event.fromLoad)
             {
                 /// The ship may have Frontier API specific data, request a profile refresh from the Frontier API shortly after switching
-                updatedAt = @event.timestamp;
                 refreshProfileDelayed();
             }
         }
@@ -1694,7 +1688,7 @@ namespace EddiShipMonitor
         {
             // Max fuel per jump calculated using unladen mass and max jump range w/ just enough fuel to complete max jump
             decimal boostConstant = 0;
-            Module module = ship.compartments.FirstOrDefault(c => c.module.edname.Contains("Int_GuardianFSDBooster"))?.module;
+            Module module = ship.compartments.FirstOrDefault(c => c?.module?.edname != null && c.module.edname.Contains("Int_GuardianFSDBooster"))?.module;
             if (module != null)
             {
                 Constants.guardianBoostFSD.TryGetValue(module.@class, out boostConstant);

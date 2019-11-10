@@ -8,7 +8,7 @@ namespace EddiEvents
     {
         public const string NAME = "Body mapped";
         public const string DESCRIPTION = "Triggered after mapping a body with the Surface Area Analysis scanner";
-        public const string SAMPLE = @"{ ""timestamp"":""2018-10-05T15:06:12Z"", ""event"":""SAAScanComplete"", ""BodyName"":""Eranin 5"", ""BodyID"":5, ""ProbesUsed"":6, ""EfficiencyTarget"":9 }";
+        public const string SAMPLE = @"{ ""timestamp"":""2018-10-05T15:06:12Z"", ""event"":""SAAScanComplete"", ""BodyName"":""Eranin 5"", ""BodyID"":5, ""SystemAddress"":2832631632594, ""ProbesUsed"":6, ""EfficiencyTarget"":9 }";
         public static Dictionary<string, string> VARIABLES = new Dictionary<string, string>();
 
         static BodyMappedEvent()
@@ -55,6 +55,8 @@ namespace EddiEvents
             VARIABLES.Add("tilt", "Axial tilt for the body, in degrees (only available if DSS equipped)");
             VARIABLES.Add("tiltprobability", "The cumulative probability describing the body's orbital tilt, relative to other bodies of the same planet type");
             VARIABLES.Add("estimatedvalue", "The estimated value of the current scan");
+            VARIABLES.Add("alreadydiscovered", "Whether this body's scan data has already been registered with Universal Cartographics");
+            VARIABLES.Add("alreadymapped", "Whether this body's map data has already been registered with Universal Cartographics");
             VARIABLES.Add("probesused", "The number of probes used to map the body");
             VARIABLES.Add("efficiencytarget", "The efficiency target for the number of probes used to map the body");
         }
@@ -65,7 +67,7 @@ namespace EddiEvents
 
         public string bodyname => body?.bodyname ?? bodyName;
 
-        public string systemname { get; private set; }
+        public string systemname => body?.systemname;
 
         public string shortname => body?.shortname;
 
@@ -165,11 +167,13 @@ namespace EddiEvents
         public string bodyName { get; private set; }
 
         public Body body { get; private set; }
+        public long? systemAddress { get; private set; }
 
-        public BodyMappedEvent(DateTime timestamp, string bodyName, Body body, int probesUsed, int efficiencyTarget) : base(timestamp, NAME)
+        public BodyMappedEvent(DateTime timestamp, string bodyName, Body body, long? systemAddress, int probesUsed, int efficiencyTarget) : base(timestamp, NAME)
         {
             this.bodyName = bodyName;
             this.body = body;
+            this.systemAddress = systemAddress;
             this.probesused = probesUsed;
             this.efficiencytarget = efficiencyTarget;
         }

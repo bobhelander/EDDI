@@ -10,7 +10,7 @@ namespace Utilities
     {
         public const string EDDI_NAME = "EDDI";
         public const string EDDI_URL_PROTOCOL = "eddi";
-        public static Version EDDI_VERSION = new Version(3, 4, 3, Version.TestPhase.final, 0);
+        public static Version EDDI_VERSION = new Version(3, 5, 0);
         public const string EDDI_SERVER_URL = "http://edcd.github.io/EDDP/";
         public static readonly string EDDI_SYSTEM_MUTEX_NAME = $"{EDDI_SERVER_URL}/{EDDI_NAME}/{Environment.GetEnvironmentVariable("UserName")}";
 
@@ -26,7 +26,7 @@ namespace Utilities
         public static readonly string VEHICLE_SRV = "SRV";
         public static readonly string VEHICLE_FIGHTER = "Fighter";
 
-        //Option defualts
+        //Option defaults
         public const int maxStationDistanceDefault = 10000;
         public const int missionWarningDefault = 60;
 

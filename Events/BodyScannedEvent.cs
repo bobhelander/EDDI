@@ -14,6 +14,7 @@ namespace EddiEvents
 
         static BodyScannedEvent()
         {
+            VARIABLES.Add("scantype", "The type of scan event (AutoScan, Basic, Detailed, NavBeacon, NavBeaconDetail)");
             VARIABLES.Add("bodyname", "The name of the body that has been scanned");
             VARIABLES.Add("systemname", "The name of the system containing the scanned body");
             VARIABLES.Add("shortname", "The short name of the body, less the system name");
@@ -56,13 +57,18 @@ namespace EddiEvents
             VARIABLES.Add("tilt", "Axial tilt for the body, in degrees (only available if DSS equipped)");
             VARIABLES.Add("tiltprobability", "The cumulative probability describing the body's orbital tilt, relative to other bodies of the same planet type");
             VARIABLES.Add("estimatedvalue", "The estimated value of the current scan");
+            VARIABLES.Add("alreadydiscovered", "Whether this body's scan data has already been registered with Universal Cartographics");
+            VARIABLES.Add("alreadymapped", "Whether this body's map data has already been registered with Universal Cartographics");
         }
 
         // Variable names for this event should match the class property names for maximum compatibility with the BodyDetails() function in Cottle
 
+        public string scantype { get; private set; } // One of AutoScan, Basic, Detailed, NavBeacon, NavBeaconDetail
+                                                     // AutoScan events are detailed scans triggered via proximity. 
+
         public string bodyname => body.bodyname;
 
-        public string systemname { get; private set; }
+        public string systemname => body.systemname;
 
         public string shortname => body.shortname;
 
@@ -161,8 +167,8 @@ namespace EddiEvents
         public AtmosphereClass atmosphereclass => body.atmosphereclass;
         public PlanetClass planetClass => body.planetClass;
         public TerraformState terraformState => body.terraformState;
-        public string scantype { get; private set; } // One of AutoScan, Basic, Detailed, NavBeacon, NavBeaconDetail
-                                                     // AutoScan events are detailed scans triggered via proximity. 
+
+        public long? systemAddress => body.systemAddress;
 
         // Deprecated, maintained for compatibility with user scripts
         [JsonIgnore, Obsolete("Use bodyname instead")]

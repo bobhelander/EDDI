@@ -24,6 +24,9 @@ namespace EddiSpeechResponder
         [JsonIgnore]
         public bool IsDefault { get; set; } = false;
 
+        [JsonIgnore]
+        public bool IsCustom => !IsDefault;
+
         [JsonProperty("scripts")]
         public Dictionary<string, Script> Scripts { get; private set; }
 
@@ -250,6 +253,10 @@ namespace EddiSpeechResponder
                     {
                         scriptHolder.Add(kv.Key);
                     }
+                    else if (kv.Value.Name == "List launchbays") // Replaced by "Launchbay report" script
+                    {
+                        scriptHolder.Add(kv.Key);
+                    }
                 }
                 foreach (string script in scriptHolder)
                 {
@@ -301,6 +308,7 @@ namespace EddiSpeechResponder
             fixedScripts = fixedScripts.OrderBy(s => s.Key).ToDictionary(s => s.Key, s => s.Value);
 
             personality.Scripts = fixedScripts;
+            personality.ToFile();
         }
 
         public static Script UpgradeScript(Script personalityScript, Script defaultScript)
@@ -310,22 +318,20 @@ namespace EddiSpeechResponder
             {
                 if (defaultScript != null)
                 {
-                    if (defaultScript.Responder)
-                    {
-                        // This is a responder script so update the description
-                        script.Description = defaultScript.Description;
-                    }
-
                     if (script.Default)
                     {
                         // This is a default script so take the latest value
                         script.Value = defaultScript.Value;
                     }
 
-                    if (script.Value == defaultScript.Value)
+                    // Set the default value of our script
+                    script.defaultValue = defaultScript.Value;
+
+                    if (defaultScript.Responder)
                     {
-                        // Ensure this is flaged as a default script (pre 2-3 didn't have this flag)
-                        script.Default = true;
+                        // This is a responder script so update applicable parameters
+                        script.Description = defaultScript.Description;
+                        script.Responder = defaultScript.Responder;
                     }
                 }
             }

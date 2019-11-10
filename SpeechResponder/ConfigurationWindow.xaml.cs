@@ -1,4 +1,5 @@
-﻿using Eddi;
+﻿using System;
+using Eddi;
 using EddiEvents;
 using EddiJournalMonitor;
 using EddiShipMonitor;
@@ -76,7 +77,7 @@ namespace EddiSpeechResponder
             }
         }
 
-        private void eddiScriptsUpdated(object sender, RoutedEventArgs e)
+        private void eddiScriptsEnabledUpdated(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox checkbox)
             {
@@ -87,12 +88,7 @@ namespace EddiSpeechResponder
             }
         }
 
-        private void eddiScriptsUpdated(object sender, DataTransferEventArgs e)
-        {
-            updateScriptsConfiguration();
-        }
-
-        private void eddiScriptsUpdated(object sender, SelectionChangedEventArgs e)
+        private void eddiScriptsPriorityUpdated(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox comboBox)
             {
@@ -163,6 +159,22 @@ namespace EddiSpeechResponder
             }
         }
 
+        private void resetOrDeleteScript(object sender, RoutedEventArgs e)
+        {
+            Script script = ((KeyValuePair<string, Script>)((Button)e.Source).DataContext).Value;
+            if (script != null)
+            {
+                if (script.IsResettable)
+                {
+                    resetScript(sender, e);
+                }
+                else
+                {
+                    deleteScript(sender, e);
+                }
+            }
+        }
+
         private void deleteScript(object sender, RoutedEventArgs e)
         {
             EDDI.Instance.SpeechResponderModalWait = true;
@@ -175,21 +187,32 @@ namespace EddiSpeechResponder
                 case MessageBoxResult.Yes:
                     // Remove the script from the list
                     Personality.Scripts.Remove(script.Name);
-                    Personality.ToFile();
-                    EDDI.Instance.Reload("Speech responder");
+                    updateScriptsConfiguration();
                     // We updated a property of the personality but not the personality itself so need to manually update items
                     scriptsData.Items.Refresh();
                     break;
             }
             EDDI.Instance.SpeechResponderModalWait = false;
         }
-
         private void resetScript(object sender, RoutedEventArgs e)
         {
             Script script = ((KeyValuePair<string, Script>)((Button)e.Source).DataContext).Value;
-            script.Value = null;
-            eddiScriptsUpdated(sender, e);
-            scriptsData.Items.Refresh();
+            // Resetting the script resets it to its value in the default personality
+            if (Personality.Scripts.ContainsKey(script.Name))
+            {
+                string messageBoxText = string.Format(Properties.SpeechResponder.reset_script_message, script.Name);
+                string caption = Properties.SpeechResponder.reset_script_button;
+                MessageBoxResult result = MessageBox.Show(messageBoxText, caption, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        script.Value = script.defaultValue;
+                        Personality.Scripts[script.Name] = script;
+                        updateScriptsConfiguration();
+                        scriptsData.Items.Refresh();
+                        break;
+                }
+            }
         }
 
         private void updateScriptsConfiguration()
@@ -335,14 +358,27 @@ namespace EddiSpeechResponder
 
         private void SpeechResponderHelp_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox checkBox)
+            MarkdownWindow speechResponderHelpWindow = new MarkdownWindow("speechResponderHelp.md");
+            speechResponderHelpWindow.Show();
+        }
+    }
+
+    public class BooleanAndConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            foreach (object value in values)
             {
-                if (checkBox.IsLoaded)
+                if ((value is bool) && (bool)value == false)
                 {
-                    MarkdownWindow speechResponderHelpWindow = new MarkdownWindow("speechResponderHelp.md");
-                    speechResponderHelpWindow.Show();
+                    return false;
                 }
             }
+            return true;
+        }
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotSupportedException("BooleanAndConverter is a OneWay converter.");
         }
     }
 }

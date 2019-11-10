@@ -2,6 +2,8 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace EddiSpeechResponder
 {
@@ -14,13 +16,11 @@ namespace EddiSpeechResponder
         [JsonProperty("enabled")]
         private bool enabled;
         [JsonProperty("priority")]
-        public int priority = 3;
+        private int priority = 3;
         [JsonProperty("responder")]
         private bool responder;
         [JsonProperty("script")]
         private string script;
-        [JsonProperty("default")]
-        private bool isDefault;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -42,18 +42,23 @@ namespace EddiSpeechResponder
         public bool Responder
         {
             get { return responder; }
-            private set { responder = value; OnPropertyChanged("Responder"); }
+            set { responder = value; OnPropertyChanged("Responder"); }
         }
 
+        [JsonProperty("default")]
+        public bool Default => Value == defaultValue;
+
         [JsonIgnore]
-        public bool Default
+        public bool IsResettableOrDeletable
         {
-            get { return isDefault; }
-            set { isDefault = value; OnPropertyChanged("Default"); }
+            get { resettableOrDeletable = !Default || (!Responder && string.IsNullOrWhiteSpace(defaultValue)); return resettableOrDeletable; }
+            set { resettableOrDeletable = value; OnPropertyChanged("IsResettableOrDeletable"); }
         }
+        [JsonIgnore]
+        private bool resettableOrDeletable;
 
         [JsonIgnore]
-        public bool IsDeleteable => !isDefault;
+        public bool IsResettable => Responder || (!Responder && !string.IsNullOrWhiteSpace(defaultValue));
 
         [JsonIgnore]
         public string Value
@@ -61,6 +66,9 @@ namespace EddiSpeechResponder
             get { return script; }
             set { script = value; OnPropertyChanged("Value"); }
         }
+
+        [JsonProperty("defaultValue")]
+        public string defaultValue { get; set; }
 
         [JsonIgnore]
         public bool HasValue
@@ -78,7 +86,7 @@ namespace EddiSpeechResponder
         [JsonIgnore]
         private IList<int> priorities;
 
-        public Script(string name, string description, bool responder, string script, int priority = 3, bool Default = false)
+        public Script(string name, string description, bool responder, string script, int priority = 3, string defaultScript = null)
         {
             Name = name;
             Description = description;
@@ -86,7 +94,7 @@ namespace EddiSpeechResponder
             Value = script;
             Priority = priority;
             Enabled = true;
-            this.Default = Default;
+            defaultValue = defaultScript;
 
             Priorities = new List<int>();
             for (int i = 1; i <= SpeechService.Instance.speechQueue.priorityQueues.Count - 1; i++)
@@ -98,6 +106,28 @@ namespace EddiSpeechResponder
         protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        [JsonExtensionData]
+        private IDictionary<string, JToken> additionalJsonData;
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            // Convert from legacy personalities which did not store the default value.
+            if (additionalJsonData != null)
+            {
+                additionalJsonData.TryGetValue("default", out JToken defaultVal);
+                if (defaultVal != null)
+                {
+                    bool defaultScript = (bool?)defaultVal ?? false;
+                    if (defaultScript)
+                    {
+                        defaultValue = Value;
+                    }
+                    additionalJsonData = null;
+                }
+            }
         }
     }
 }

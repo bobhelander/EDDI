@@ -11,14 +11,14 @@ namespace EddiStarMapService
 {
     public partial class StarMapService
     {
-        public static List<Body> GetStarMapBodies(string system, long? edsmId = null)
+        public List<Body> GetStarMapBodies(string system, long? edsmId = null)
         {
             if (system == null) { return null; }
-            var client = new RestClient(baseUrl);
+
             var request = new RestRequest("api-system-v1/bodies", Method.POST);
             request.AddParameter("systemName", system);
             request.AddParameter("systemId", edsmId);
-            var clientResponse = client.Execute<Dictionary<string, object>>(request);
+            var clientResponse = restClient.Execute<Dictionary<string, object>>(request);
             if (clientResponse.IsSuccessful)
             {
                 var token = JToken.Parse(clientResponse.Content);
@@ -34,7 +34,7 @@ namespace EddiStarMapService
             return null;
         }
 
-        private static List<Body> ParseStarMapBodies(JObject response)
+        public List<Body> ParseStarMapBodies(JObject response)
         {
             List<Body> Bodies = new List<Body>();
             if (response != null)
@@ -56,10 +56,12 @@ namespace EddiStarMapService
                         }
                         catch (Exception ex)
                         {
-                            Dictionary<string, object> data = new Dictionary<string, object>();
-                            data.Add("body", JsonConvert.SerializeObject(body));
-                            data.Add("exception", ex.Message);
-                            data.Add("stacktrace", ex.StackTrace);
+                            Dictionary<string, object> data = new Dictionary<string, object>
+                            {
+                                {"body", JsonConvert.SerializeObject(body)},
+                                {"exception", ex.Message},
+                                {"stacktrace", ex.StackTrace}
+                            };
                             Logging.Error("Error parsing EDSM body result.", data);
                             throw;
                         }
@@ -69,7 +71,7 @@ namespace EddiStarMapService
             return Bodies;
         }
 
-        private static Body ParseStarMapBody(JObject body, string systemName)
+        private Body ParseStarMapBody(JObject body, string systemName)
         {
             // General items 
             long? bodyId = (long?)body["bodyId"];
@@ -134,10 +136,12 @@ namespace EddiStarMapService
                 decimal? solarradius = (decimal?)body["solarRadius"];
                 decimal radiusKm = (decimal)(solarradius != null ? solarradius * Constants.solarRadiusMeters / 1000 : null);
 
-                Body Body = new Body(bodyname, bodyId, parents, distanceLs, stellarclass, stellarsubclass, stellarMass, radiusKm, absolutemagnitude, ageMegaYears, temperatureKelvin, luminosityclass, semimajoraxisLs, eccentricity, orbitalInclinationDegrees, periapsisDegrees, orbitalPeriodDays, rotationPeriodDays, axialTiltDegrees, rings, true, false, systemName, null);
-                Body.EDSMID = EDSMID;
-                DateTime updatedAt = DateTime.SpecifyKind(DateTime.Parse((string)body["updateTime"]), DateTimeKind.Utc);
-                Body.updatedat = updatedAt == null ? null : (long?)(updatedAt.Subtract(new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds;
+                Body Body = new Body(bodyname, bodyId, parents, distanceLs, stellarclass, stellarsubclass, stellarMass,
+                    radiusKm, absolutemagnitude, ageMegaYears, temperatureKelvin, luminosityclass, semimajoraxisLs,
+                    eccentricity, orbitalInclinationDegrees, periapsisDegrees, orbitalPeriodDays, rotationPeriodDays,
+                    axialTiltDegrees, rings, true, false, systemName, null) {EDSMID = EDSMID};
+                DateTime updatedAt = JsonParsing.getDateTime("updateTime", body);
+                Body.updatedat = updatedAt == null ? null : (long?)Dates.fromDateTimeToSeconds(updatedAt);
 
                 return Body;
             }
@@ -232,11 +236,11 @@ namespace EddiStarMapService
                 }
                 ReserveLevel reserveLevel = ReserveLevel.FromName((string)body["reserveLevel"]) ?? ReserveLevel.None;
 
-                DateTime updatedAt = DateTime.SpecifyKind(DateTime.Parse((string)body["updateTime"]), DateTimeKind.Utc);
+                DateTime updatedAt = JsonParsing.getDateTime("updateTime", body);
                 Body Body = new Body(bodyname, bodyId, parents, distanceLs, tidallylocked, terraformState, planetClass, atmosphereClass, atmosphereCompositions, volcanism, earthmass, radiusKm, (decimal)gravity, temperatureKelvin, pressureAtm, landable, materials, solidCompositions, semimajoraxisLs, eccentricity, orbitalInclinationDegrees, periapsisDegrees, orbitalPeriodDays, rotationPeriodDays, axialTiltDegrees, rings, reserveLevel, true, true, systemName, null)
                 {
                     EDSMID = EDSMID,
-                    updatedat = updatedAt == null ? null : (long?)(updatedAt.Subtract(new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds
+                    updatedat = updatedAt == null ? null : (long?)Dates.fromDateTimeToSeconds(updatedAt)
                 };
 
                 return Body;

@@ -155,9 +155,18 @@ namespace Eddi
         [JsonProperty("Gender")]
         public string Gender { get; set; } = "Male";
 
+        [JsonProperty("powerMerits")]
+        public int? powerMerits { get; set; }
+
         /// <summary>the current export target for the shipyard</summary>
         [JsonProperty("exporttarget")]
         public string exporttarget { get; set; } = "Coriolis";
+
+        [JsonProperty("OverrideCulture")]
+        public string OverrideCulture { get; set; }
+
+        [JsonProperty("CommanderName")]
+        public string CommanderName { get; set; }
 
         [JsonIgnore]
         private string dataPath;

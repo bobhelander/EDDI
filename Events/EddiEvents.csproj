@@ -65,6 +65,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommanderReputationEvent.cs" />
+    <Compile Include="PowerplayEvent.cs" />
+    <Compile Include="CommanderLoadingEvent.cs" />
     <Compile Include="RingMappedEvent.cs" />
     <Compile Include="BodyMappedEvent.cs" />
     <Compile Include="CargoDepotEvent.cs" />
@@ -77,11 +80,14 @@
     <Compile Include="OutfittingEvent.cs" />
     <Compile Include="RouteDetailsEvent.cs" />
     <Compile Include="ShipyardEvent.cs" />
+    <Compile Include="RingHotspotsEvent.cs" />
+    <Compile Include="SurfaceSignalsEvent.cs" />
     <Compile Include="SignalDetectedEvent.cs" />
     <Compile Include="FSSDiscoveryScanEvent.cs" />
     <Compile Include="SquadronRankEvent.cs" />
     <Compile Include="SquadronStartupEvent.cs" />
     <Compile Include="SquadronStatusEvent.cs" />
+    <Compile Include="StatisticsEvent.cs" />
     <Compile Include="UnhandledEvent.cs" />
     <Compile Include="FighterRebuiltEvent.cs" />
     <Compile Include="JetConeDamageEvent.cs" />

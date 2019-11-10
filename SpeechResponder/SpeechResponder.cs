@@ -44,11 +44,6 @@ namespace EddiSpeechResponder
             return Properties.SpeechResponder.name;
         }
 
-        public string ResponderVersion()
-        {
-            return "1.0.0";
-        }
-
         public string ResponderDescription()
         {
             return Properties.SpeechResponder.desc;
@@ -69,8 +64,8 @@ namespace EddiSpeechResponder
             scriptResolver = new ScriptResolver(personality?.Scripts);
             subtitles = configuration?.Subtitles ?? false;
             subtitlesOnly = configuration?.SubtitlesOnly ?? false;
-            Logging.Info("Initialised " + ResponderName() + " " + ResponderVersion());
-        }
+        Logging.Info($"Initialized {ResponderName()}");
+    }
 
         /// <summary>
         /// Change the personality for the speech responder
@@ -128,8 +123,8 @@ namespace EddiSpeechResponder
             scriptResolver = new ScriptResolver(personality.Scripts);
             subtitles = configuration.Subtitles;
             subtitlesOnly = configuration.SubtitlesOnly;
-            Logging.Debug("Reloaded " + ResponderName() + " " + ResponderVersion());
-        }
+            Logging.Debug($"Reloaded {ResponderName()}");
+    }
 
         public void Handle(Event @event)
         {
@@ -230,7 +225,7 @@ namespace EddiSpeechResponder
                 ["destinationdistance"] = EDDI.Instance.DestinationDistanceLy,
                 ["environment"] = EDDI.Instance.Environment,
                 ["horizons"] = EDDI.Instance.inHorizons,
-                ["va_active"] = EDDI.FromVA,
+                ["va_active"] = App.FromVA,
                 ["vehicle"] = EDDI.Instance.Vehicle
             };
 

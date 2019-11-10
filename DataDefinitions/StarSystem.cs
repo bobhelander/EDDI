@@ -91,6 +91,47 @@ namespace EddiDataDefinitions
             }
         }
 
+        public void PreserveBodyData(List<Body> oldBodies, ImmutableList<Body> newBodies)
+        {
+            // Update `bodies` with new server data, except preserve properties not available via the server
+            var newBodyBuilder = newBodies.ToBuilder();
+            foreach (Body oldBody in oldBodies)
+            {
+                int index = newBodyBuilder.FindIndex(b => b.bodyname == oldBody.bodyname);
+                if (oldBody.scanned != null)
+                {
+                    if (oldBody.scanned != newBodyBuilder[index].scanned)
+                    {
+                        newBodyBuilder[index].scanned = oldBody.scanned;
+                    }
+                    if (oldBody.alreadydiscovered != newBodyBuilder[index].alreadydiscovered)
+                    {
+                        newBodyBuilder[index].alreadydiscovered = oldBody.alreadydiscovered;
+                    }
+                }
+                if (oldBody.mapped != null)
+                {
+                    if (oldBody.mapped != newBodyBuilder[index].mapped)
+                    {
+                        newBodyBuilder[index].mapped = oldBody.mapped;
+                    }
+                    if (oldBody.alreadymapped != newBodyBuilder[index].alreadymapped)
+                    {
+                        newBodyBuilder[index].alreadymapped = oldBody.alreadymapped;
+                    }
+                    if (oldBody.mappedEfficiently != newBodyBuilder[index].mappedEfficiently)
+                    {
+                        newBodyBuilder[index].mappedEfficiently = oldBody.mappedEfficiently;
+                    }
+                }
+            }
+            newBodyBuilder.Sort(Body.CompareById);
+            bodies = newBodyBuilder.ToImmutable();
+        }
+
+        /// <summary>True if the main star in the system is scoopable</summary>
+        public bool scoopable => bodies.Where(b => b.scoopable && b.distance == 0).Count() > 0;
+
         /// <summary>The reserve level applicable to the system's rings</summary>
         public ReserveLevel Reserve { get; set; } = ReserveLevel.None;
         [JsonIgnore]
@@ -109,10 +150,17 @@ namespace EddiDataDefinitions
         [JsonIgnore]
         public string security => (securityLevel ?? SecurityLevel.None).localizedName;
 
+        /// <summary> The powerplay power exerting influence within the system (null if contested)</summary>
         public Power Power { get; set; }
+
         [JsonIgnore]
         public string power => (Power ?? Power.None).localizedName;
-        public string powerstate { get; set; }
+
+        /// <summary> The state of powerplay within the system </summary>
+        public PowerplayState powerState { get; set; }
+
+        [JsonIgnore]
+        public string powerstate => (powerState ?? PowerplayState.None).localizedName;
 
         [JsonIgnore]
         public string state => (Faction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
@@ -176,12 +224,13 @@ namespace EddiDataDefinitions
 
         /// <summary>Time of last visit, expressed as a Unix timestamp in seconds</summary>
         [JsonIgnore]
-        public long? lastVisitSeconds => lastvisit > DateTime.MinValue ? (long?)((DateTime)lastvisit).Subtract(new DateTime(1970, 1, 1)).TotalSeconds : null;
+        public long? lastVisitSeconds => lastvisit > DateTime.MinValue ? (long?)Utilities.Dates.fromDateTimeToSeconds((DateTime)lastvisit) : null;
 
         /// <summary>comment on this starsystem</summary>
         public string comment;
 
         /// <summary>distance from home</summary>
+        [JsonIgnore]
         public decimal? distancefromhome;
 
         /// <summary>Whether a system scan has already been completed for this system in the current play session</summary>
@@ -207,8 +256,9 @@ namespace EddiDataDefinitions
             return result;
         }
 
-        // Not intended to be user facing - discoverable bodies as reported by a discovery scan "honk"
-        public int discoverableBodies = 0;
+        // Discoverable bodies as reported by a discovery scan "honk"
+        [JsonProperty("discoverableBodies")]
+        public int totalbodies;
 
         // Not intended to be user facing - the last time the information present changed
         public long? updatedat;
@@ -242,11 +292,10 @@ namespace EddiDataDefinitions
             if (factionPresence.FactionState == null)
             {
                 // Convert legacy data
-                string name = (string)additionalJsonData?["state"];
-                if (name != null)
+                string factionState = (string)additionalJsonData?["state"];
+                if (factionState != null)
                 {
-                    Faction.presences.FirstOrDefault(p => p.systemName == name).FactionState =
-                        FactionState.FromEDName(name ?? "None");
+                    factionPresence.FactionState = FactionState.FromEDName(factionState) ?? FactionState.None;
                 }
             }
             else
@@ -260,6 +309,7 @@ namespace EddiDataDefinitions
         public StarSystem()
         {
             bodies = ImmutableList.Create<Body>();
+            factions = new List<Faction>();
             stations = new List<Station>();
         }
 
@@ -288,13 +338,13 @@ namespace EddiDataDefinitions
             }
 
             // Bonus for fully discovering a system
-            if (discoverableBodies == bodies.Where(b => b.scanned != null).Count())
+            if (totalbodies == bodies.Where(b => b.scanned != null).Count())
             {
-                value += discoverableBodies * 1000;
+                value += totalbodies * 1000;
 
                 // Bonus for fully mapping a system
-                int mappableBodies = bodies.Where(b => b.bodyType.invariantName != "Star").Count();
-                if (mappableBodies == bodies.Where(b => b.mapped != null).Count())
+                int mappableBodies = bodies.Count(b => b.bodyType.invariantName != "Star");
+                if (mappableBodies == bodies.Count(b => b.mapped != null))
                 {
                     value += mappableBodies * 10000;
                 }

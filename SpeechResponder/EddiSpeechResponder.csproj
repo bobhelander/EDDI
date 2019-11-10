@@ -124,6 +124,10 @@
       <Project>{5b11d1b2-6128-4f2b-8ef3-8168089c5ec9}</Project>
       <Name>EddiCrimeMonitor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\EddiInaraService\EddiInaraService.csproj">
+      <Project>{19AB6841-AA93-4D23-BE6D-4CB6883CDF62}</Project>
+      <Name>EddiInaraService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\EDDI\Eddi.csproj">
       <Project>{EC7BA042-A370-447F-8C3E-241358CEBCBB}</Project>
       <Name>Eddi</Name>
@@ -167,6 +171,10 @@
     <ProjectReference Include="..\SpeechService\EddiSpeechService.csproj">
       <Project>{19572A69-C13A-459D-AB72-2B0F034AC27F}</Project>
       <Name>EddiSpeechService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\StarMapService\EddiStarMapService.csproj">
+      <Project>{6614e6ad-65ae-49fc-850b-9df79d1cc998}</Project>
+      <Name>EddiStarMapService</Name>
     </ProjectReference>
     <ProjectReference Include="..\StatusMonitor\EddiStatusMonitor.csproj">
       <Project>{fec7ba2b-23c3-4f4f-96ef-bf1f1909eb03}</Project>

@@ -152,7 +152,7 @@
     <value>Cancella personalità</value>
   </data>
   <data name="delete_personality_message" xml:space="preserve">
-    <value>Vuoi davvero cancellare la personalità "{0}"?</value>
+    <value>Sei sicuro di voler eliminare la personalità "{0}"?</value>
   </data>
   <data name="delete_script" xml:space="preserve">
     <value>Cancella</value>
@@ -161,7 +161,7 @@
     <value>Cancella script</value>
   </data>
   <data name="delete_script_message" xml:space="preserve">
-    <value>Sei sicuro di voler cancellare questi "{0}" script?</value>
+    <value>Sei sicuro di voler eliminare lo script "{0}"?</value>
   </data>
   <data name="desc" xml:space="preserve">
     <value>Risponde ad eventi con frasi generate da Script basate sulle informazioni nell'evento. Non tutti gli eventi hanno risposte generate da Script. Se uno Script di risposta è vuoto i suoi bottoni 'Prova' e 'Vedi' sono disabilitati. Gli Script basati su Eventi possono essere disabilitati o ricevere una differente Priorità ma non cancellati.</value>
@@ -185,7 +185,7 @@
     <value>Aiuto</value>
   </data>
   <data name="name" xml:space="preserve">
-    <value>Assistente vocale</value>
+    <value>Assistente Vocale</value>
   </data>
   <data name="reset_script_button" xml:space="preserve">
     <value>Ripristina impostazioni predefinite</value>
@@ -223,5 +223,11 @@
   </data>
   <data name="localizedAnd" xml:space="preserve">
     <value>e</value>
+  </data>
+  <data name="reset_script" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="reset_script_message" xml:space="preserve">
+    <value>Sei sicuro di voler resettare lo script "{0}"?</value>
   </data>
 </root>

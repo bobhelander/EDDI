@@ -82,6 +82,9 @@
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="RestSharp, Version=106.3.1.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.106.3.1\lib\net452\RestSharp.dll</HintPath>
+    </Reference>
     <Reference Include="Rollbar, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Rollbar.1.1.1\lib\net471\Rollbar.dll</HintPath>
     </Reference>
@@ -139,6 +142,7 @@
   <ItemGroup>
     <Compile Include="CapiShipyardTests.cs" />
     <Compile Include="BgsDataTests.cs" />
+    <Compile Include="InaraTests.cs" />
     <Compile Include="CrimeMonitorTests.cs" />
     <Compile Include="NavigationServiceTests.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -189,6 +193,10 @@
       <Project>{5b11d1b2-6128-4f2b-8ef3-8168089c5ec9}</Project>
       <Name>EddiCrimeMonitor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\EddiInaraService\EddiInaraService.csproj">
+      <Project>{19ab6841-aa93-4d23-be6d-4cb6883cdf62}</Project>
+      <Name>EddiInaraService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\EDDI\Eddi.csproj">
       <Project>{ec7ba042-a370-447f-8c3e-241358cebcbb}</Project>
       <Name>Eddi</Name>
@@ -224,6 +232,10 @@
     <ProjectReference Include="..\GalnetMonitor\EddiGalnetMonitor.csproj">
       <Project>{93b946c8-3f78-465a-8cc4-c0fc4127b762}</Project>
       <Name>EddiGalnetMonitor</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\InaraResponder\EddiInaraResponder.csproj">
+      <Project>{11bef9d3-91a4-4522-9581-bcc2a1f5eec7}</Project>
+      <Name>EddiInaraResponder</Name>
     </ProjectReference>
     <ProjectReference Include="..\JournalMonitor\EddiJournalMonitor.csproj">
       <Project>{72b6f41d-0107-4d3a-8603-c3edda1c5243}</Project>
@@ -293,6 +305,13 @@
     <EmbeddedResource Include="Properties\sqlStarSystem3.json" />
     <EmbeddedResource Include="Properties\sqlStarSystem4.json" />
     <EmbeddedResource Include="Properties\vehicle.json" />
+    <None Include="Properties\CapitalSystems.json" />
+    <None Include="Properties\cubeSystemsAroundSol.json" />
+    <None Include="Properties\Sol.json" />
+    <None Include="Properties\SolBodies.json" />
+    <None Include="Properties\SolFactions.json" />
+    <None Include="Properties\SolStations.json" />
+    <None Include="Properties\sphereAroundSol.json" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\starsystems.txt" />
@@ -301,6 +320,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Choose>

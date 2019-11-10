@@ -33,7 +33,7 @@
       "enabled": true,
       "priority": 3,
       "responder": false,
-      "script": "{_ Fetch from Context _}\r\n{set reportSystem to SystemDetails(state.eddi_context_system_name)}\r\n\r\n{_ Build a list of scanned bodies _}\r\n\r\n{set mappedList to []}\r\n{for body in reportSystem.bodies:\r\n   {if body.mapped:\r\n       {set mappedList to cat(mappedList, [P(body.shortname)])} \r\n   }\r\n}\r\n\r\n{_ Begin speaking _}\r\n\r\n{if len(mappedList) > 0:\r\n    {if len(mappedList) = 1: Body |else: Bodies}\r\n    {List(mappedList)}\r\n    {if len(mappedList) = 1: has |else: have }\r\n    {set already to Occasionall(2, \"already\")}\r\n    {OneOf(\"{already} been mapped\", \"been mapped {already}\")}.\r\n|else:\r\n    You have yet to map any bodies in this system.\r\n}\r\n",
+      "script": "{_ Fetch from Context _}\r\n{set reportSystem to SystemDetails(state.eddi_context_system_name)}\r\n\r\n{_ Build a list of scanned bodies _}\r\n\r\n{set mappedList to []}\r\n{for body in reportSystem.bodies:\r\n   {if body.mapped:\r\n       {set mappedList to cat(mappedList, [P(body.shortname)])} \r\n   }\r\n}\r\n\r\n{_ Begin speaking _}\r\n\r\n{if len(mappedList) > 0:\r\n    {if len(mappedList) = 1: Body |else: Bodies}\r\n    {List(mappedList)}\r\n    {if len(mappedList) = 1: has |else: have }\r\n    {set already to Occasionally(2, \"already\")}\r\n    {OneOf(\"{already} been mapped\", \"been mapped {already}\")}.\r\n|else:\r\n    You have yet to map any bodies in this system.\r\n}\r\n",
       "default": true,
       "name": "Bodies mapped",
       "description": "Reports all the bodies mapped in this system so far"
@@ -203,7 +203,7 @@
     "Cargo scoop": {
       "enabled": true,
       "priority": 3,
-      "responder": false,
+      "responder": true,
       "script": null,
       "default": true,
       "name": "Cargo scoop",
@@ -263,6 +263,15 @@
       "name": "Commander continued",
       "description": "Triggered when you continue an existing game"
     },
+    "Commander loading": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": null,
+      "default": true,
+      "name": "Commander loading",
+      "description": "Triggered at the very beginning of loading a game"
+    },
     "Commander progress": {
       "enabled": true,
       "priority": 3,
@@ -280,6 +289,15 @@
       "default": true,
       "name": "Commander ratings",
       "description": "Triggered when your ratings are reported"
+    },
+    "Commander reputation": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "{_ A note on thresholds... _}\r\n{_ -100.. -90: hostile _}\r\n{_ -90.. -35: unfriendly _}\r\n{_ -35..+ 4: neutral _}\r\n{_ +4..+35: cordial _}\r\n{_ +35..+90: friendly _}\r\n{_ +90..+100: allied _}\r\n",
+      "default": true,
+      "name": "Commander reputation",
+      "description": "Triggered when your reputation is reported"
     },
     "Commander started": {
       "enabled": true,
@@ -582,7 +600,7 @@
       "enabled": true,
       "priority": 3,
       "responder": true,
-      "script": "{_ Fetch from Context _}\r\n{set reportSystem to SystemDetails(state.eddi_context_system_name)}\r\n\r\n{Pause(1000)}\r\n\r\n{if ship.Role.edname = \"Exploration\" || ship.Role.edname = \"Multipurpose\":\r\n    {if reportSystem:\r\n        {set scannedBodies to 0}\r\n        {for body in reportSystem.bodies:\r\n            {if body.scanned:\r\n                {set scannedBodies to scannedBodies + 1}\r\n            }\r\n        }\r\n        {set bodiesToScan to (event.bodies - scannedBodies)}\r\n\r\n        {if event.bodies > 1 && event.bodies != scannedBodies:\r\n            {OneOf(\r\n                \"{scannedBodies} out of {event.bodies} bodies have been scanned\", \r\n                \"{bodiesToScan} {if bodiesToScan > 1: bodies remain |else: body remains} to be scanned\"\r\n            )}\r\n            {Occasionally(3, OneOf(\"here\", \"in this system\"))}.\r\n        |else:\r\n            {set bodiesToMap to F(\"Bodies to map\")}\r\n            {if bodiesToMap:\r\n                {bodiesToMap}\r\n            }\r\n        }\r\n    }\r\n}",
+      "script": "{_ Fetch from Context _}\r\n{set reportSystem to SystemDetails(state.eddi_context_system_name)}\r\n\r\n{if !reportSystem.name || reportSystem.name = \"\":\r\n\r\n    I'm not sure which system you are asking about.\r\n\r\n|else:\r\n\r\n    {if ship.Role.edname = \"Exploration\" || ship.Role.edname = \"Multipurpose\":\r\n        {if reportSystem:\r\n            {if len(reportSystem.bodies) > 0 && len(reportSystem.bodies) < event.totalbodies:\r\n\r\n                {Pause(1000)}\r\n\r\n                {set scannedBodies to 0}\r\n                {for body in reportSystem.bodies:\r\n                    {if body.scanned:\r\n                        {set scannedBodies to scannedBodies + 1}\r\n                    }\r\n                }\r\n                {set bodiesToScan to (event.totalbodies- scannedBodies)}\r\n\r\n                {if scannedBodies < event.totalbodies:\r\n                    {OneOf(\r\n                        \"{scannedBodies} out of {event.totalbodies} bodies have been scanned\", \r\n                        \"{bodiesToScan} {if bodiesToScan > 1: bodies remain |else: body remains} to be scanned\"\r\n                    )}\r\n                    {Occasionally(3, OneOf(\"here\", \"in this system\"))}.\r\n                }\r\n\r\n            |else:\r\n\r\n                {set bodiesToMap to F(\"Bodies to map\")}\r\n                {if bodiesToMap:\r\n                    {bodiesToMap}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}",
       "default": true,
       "name": "Discovery scan",
       "description": "Triggered when performing a full system scan (honk)"
@@ -1076,7 +1094,7 @@
     "Landing gear": {
       "enabled": true,
       "priority": 3,
-      "responder": false,
+      "responder": true,
       "script": null,
       "default": true,
       "name": "Landing gear",
@@ -1091,6 +1109,15 @@
       "name": "Landing pad report",
       "description": "Report on the location of a landing pad"
     },
+    "Launchbay report": {
+      "enabled": true,
+      "priority": 3,
+      "responder": false,
+      "script": "{for launchbay in ship.launchbays:\r\n    Você tem um hangar de {launchbay.type} de tamanho {launchbay.size}.\r\n\r\n    {if launchbay.type = \"SRV\":\r\n        Ele tem {len(launchbay.vehicles)} V R S{if len(launchbay.vehicles) != 1:'s}\r\n        {OneOf(\"a bordo\", \"instalado{if len(launchbay.vehicles) != 1:'s}\")}.\r\n    |else:\r\n        {set cur to 0}\r\n\r\n        {for vehicle in launchbay.vehicles:\r\n            ele {if cur > 0: também} tem\r\n            um {vehicle.name}, com CATRACA {vehicle.loadout} configuração\r\n\r\n            {if type(vehicle.mount) != null:\r\n                {if vehicle.mount = 'F':\r\n                    e armas fixas\r\n                |elif vehicle.mount = 'G':\r\n                    e armas guiadas\r\n                }\r\n            }\r\n            .{_ full stop _}\r\n\r\n            {if vehicle.rebuilds != null:\r\n                Ele tem\r\n                {if vehicle.rebuilds = 0:\r\n                    nenhuma\r\n                |else:\r\n                    {vehicle.rebuilds}\r\n                }\r\n                reconstruç{if vehicle.rebuilds != 1:ões|else:ão} sobrando.\r\n            }\r\n\r\n            {set cur to cur + 1}\r\n            {Pause(500)}\r\n        }\r\n    }\r\n}\r\n",
+      "default": true,
+      "name": "Launchbay report",
+      "description": "Describes the contents of each launchbay in the ship"
+    },
     "Liftoff": {
       "enabled": true,
       "priority": 3,
@@ -1103,7 +1130,7 @@
     "Lights": {
       "enabled": true,
       "priority": 3,
-      "responder": false,
+      "responder": true,
       "script": null,
       "default": true,
       "name": "Lights",
@@ -1144,15 +1171,6 @@
       "default": true,
       "name": "Limpet sold",
       "description": "Triggered when you sell limpets to a station"
-    },
-    "List launchbays": {
-      "enabled": true,
-      "priority": 3,
-      "responder": false,
-      "script": "{for launchbay in ship.launchbays:\r\n    Você tem um hangar de {launchbay.type} de tamanho {launchbay.size}.\r\n\r\n    {if launchbay.type = \"SRV\":\r\n        Ele tem {len(launchbay.vehicles)} V R S{if len(launchbay.vehicles) != 1:'s}\r\n        {OneOf(\"a bordo\", \"instalado{if len(launchbay.vehicles) != 1:'s}\")}.\r\n    |else:\r\n        {set cur to 0}\r\n\r\n        {for vehicle in launchbay.vehicles:\r\n            ele {if cur > 0: também} tem\r\n            um {vehicle.name}, com CATRACA {vehicle.loadout} configuração\r\n\r\n            {if type(vehicle.mount) != null:\r\n                {if vehicle.mount = 'F':\r\n                    e armas fixas\r\n                |elif vehicle.mount = 'G':\r\n                    e armas guiadas\r\n                }\r\n            }\r\n            .{_ full stop _}\r\n\r\n            {if vehicle.rebuilds != null:\r\n                Ele tem\r\n                {if vehicle.rebuilds = 0:\r\n                    nenhuma\r\n                |else:\r\n                    {vehicle.rebuilds}\r\n                }\r\n                reconstruç{if vehicle.rebuilds != 1:ões|else:ão} sobrando.\r\n            }\r\n\r\n            {set cur to cur + 1}\r\n            {Pause(500)}\r\n        }\r\n    }\r\n}\r\n",
-      "default": true,
-      "name": "List launchbays",
-      "description": "Describes the contents of each launchbay in the ship"
     },
     "Location": {
       "enabled": true,
@@ -1793,6 +1811,15 @@
       "name": "Power voucher received",
       "description": "Triggered when a commander turns in combat vouchers against an opposing power"
     },
+    "Powerplay": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "You are pledged to {P(event.power)}. \r\nYou have served for \r\n{if event.timepledgedweeks > 1:\r\n    {Humanise(event.timepledgedweeks)} weeks \r\n|elif event.timepledgedweeks = 1:\r\n    one week \r\n|elif event.timepledgeddays > 1:\r\n    {Humanise(event.timepledgeddays)} days\r\n|elif event.timepledgeddays = 1:\r\n    one day\r\n|else:\r\n    less than one day\r\n}\r\nand are at rank {event.rank} with \r\n{if event.merits > 0:\r\n    {Humanise(event.merits)}\r\n|else:\r\n    no\r\n}\r\naccumulated merits.\r\n",
+      "default": true,
+      "name": "Powerplay",
+      "description": "Triggered periodically when pledged to a power"
+    },
     "RandomizeVoice": {
       "enabled": true,
       "priority": 3,
@@ -1828,6 +1855,15 @@
       "default": true,
       "name": "Report last scan value",
       "description": "Report the estimated value of the last body scanned"
+    },
+    "Ring hotspots detected": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "{if ship.Role.invariantName = \"Miner\" || ship.Role.invariantName = \"Multipurpose\":\r\n    {set hotspots to []}\r\n    {for hotspot in event.hotspots: \r\n        {set hotspot_desc to: \r\n            {hotspot.amount} of {hotspot.commodity}\r\n        }\r\n        {set hotspots to cat(hotspots, [hotspot_desc])}\r\n    }\r\n\r\n    Hotspots detected.\r\n    {List(hotspots)}\r\n}",
+      "default": true,
+      "name": "Ring hotspots detected",
+      "description": "Triggered when hotspots are detected in a ring"
     },
     "Ring mapped": {
       "enabled": true,
@@ -2233,6 +2269,24 @@
       "default": true,
       "name": "Station report",
       "description": "Function to report on the details of the current station"
+    },
+    "Statistics": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": null,
+      "default": true,
+      "name": "Statistics",
+      "description": "Statistics provided at the beginning of a game session"
+    },
+    "Surface signals detected": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "{set surfacesignals to []}\r\n{for signal in event.surfacesignals: \r\n    {set surfacesignals_desc to: \r\n        {signal.amount} {signal.source}{if signal.amount > 1:s}\r\n    }\r\n    {set surfacesignals to cat(surfacesignals, [surfacesignals_desc])}\r\n}\r\n\r\n{List(surfacesignals)} detected.",
+      "default": true,
+      "name": "Surface signals detected",
+      "description": "Triggered when surface signal sources are detected"
     },
     "Swapout check": {
       "enabled": true,

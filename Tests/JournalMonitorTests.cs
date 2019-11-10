@@ -473,27 +473,38 @@ namespace UnitTests
         [TestMethod]
         public void TestFriends()
         {
-            string line = "{ \"timestamp\":\"2017-08-24T17:22:03Z\", \"event\":\"Friends\", \"Status\":\"Online\", \"Name\":\"_Testy_McTest_\" }";
+            string line1 = "{ \"timestamp\":\"2017-08-24T17:22:03Z\", \"event\":\"Friends\", \"Status\":\"Online\", \"Name\":\"_Testy_McTest_\" }";
             string line2 = "{ \"timestamp\":\"2017-08-24T17:22:03Z\", \"event\":\"Friends\", \"Status\":\"Offline\", \"Name\":\"_Testy_McTest_\" }";
 
-            List<Event> events = JournalMonitor.ParseJournalEntry(line);
-            events = JournalMonitor.ParseJournalEntry(line2);
-
-            /// Since this friend is unknown to us, the first time we see this friend no event should trigger. 
-            /// Only the second line, registering the status as offline, should be registered as an event.
-            Assert.IsTrue(events.Count == 1);
-
-            FriendsEvent @event = (FriendsEvent)events[0];
-            Friend testFriend = new Friend
+            // Setup
+            Eddi.EDDI eddiInstance = Eddi.EDDI.Instance;
+            Friend[] preexistingFriends = eddiInstance.Cmdr.friends.ToArray();
+            PrivateObject privateEddiInstance = new PrivateObject(eddiInstance);
+            bool eventFriends(FriendsEvent friendsEvent)
             {
-                name = @event.name,
-                status = @event.status
-            };
+                return (bool)privateEddiInstance.Invoke("eventFriends", new object[] { friendsEvent });
+            }
 
-            Assert.AreEqual("Offline", @event.status);
+            // Act
+            List<Event> events1 = JournalMonitor.ParseJournalEntry(line1);
+            List<Event> events2 = JournalMonitor.ParseJournalEntry(line2);
+
+            // Both should generate one event
+            Assert.AreEqual(1, events1.Count);
+            Assert.AreEqual(1, events2.Count);
+            FriendsEvent event1 = (FriendsEvent)events1[0];
+            FriendsEvent event2 = (FriendsEvent)events2[0];
+            Assert.AreEqual("Online", event1.status);
+            Assert.AreEqual("Offline", event2.status);
+
+            // The first event should be suppressed at the EDDI level
+            bool passEvent1 = eventFriends(event1);
+            bool passEvent2 = eventFriends(event2);
+            Assert.IsFalse(passEvent1);
+            Assert.IsTrue(passEvent2);
 
             // Clean up
-            Eddi.EDDI.Instance.Cmdr.friends.Remove(testFriend);
+            eddiInstance.Cmdr.friends = new List<Friend>(preexistingFriends);
         }
 
         [TestMethod]
@@ -1095,7 +1106,71 @@ namespace UnitTests
             Assert.AreEqual(1, @event.conflicts[0].faction1dayswon);
             Assert.AreEqual("Colonia Co-operative", @event.conflicts[0].faction2);
             Assert.AreEqual(2, @event.conflicts[0].faction2dayswon);
+        }
 
+        [TestMethod]
+        public void TestStatisticsWithoutThargoidEncounters()
+        {
+            string line = @"{ ""timestamp"":""2019 - 09 - 13T23: 08:23Z"", ""event"":""Statistics"", ""Bank_Account"":{ ""Current_Wealth"":102745031, ""Spent_On_Ships"":63159760, ""Spent_On_Outfitting"":68503498, ""Spent_On_Repairs"":61377, ""Spent_On_Fuel"":18207, ""Spent_On_Ammo_Consumables"":26558, ""Insurance_Claims"":2, ""Spent_On_Insurance"":1981088, ""Owned_Ship_Count"":1 }, ""Combat"":{ ""Bounties_Claimed"":14, ""Bounty_Hunting_Profit"":318587, ""Combat_Bonds"":0, ""Combat_Bond_Profits"":0, ""Assassinations"":1, ""Assassination_Profits"":496428, ""Highest_Single_Reward"":96725, ""Skimmers_Killed"":0 }, ""Crime"":{ ""Notoriety"":0, ""Fines"":10, ""Total_Fines"":115301, ""Bounties_Received"":1, ""Total_Bounties"":400, ""Highest_Bounty"":400 }, ""Smuggling"":{ ""Black_Markets_Traded_With"":1, ""Black_Markets_Profits"":67, ""Resources_Smuggled"":2, ""Average_Profit"":33.5, ""Highest_Single_Transaction"":42 }, ""Trading"":{ ""Markets_Traded_With"":15, ""Market_Profits"":12890065, ""Resources_Traded"":11297, ""Average_Profit"":96917.781954887, ""Highest_Single_Transaction"":682212 }, ""Mining"":{ ""Mining_Profits"":0, ""Quantity_Mined"":0, ""Materials_Collected"":726 }, ""Exploration"":{ ""Systems_Visited"":334, ""Exploration_Profits"":6162412, ""Planets_Scanned_To_Level_2"":909, ""Planets_Scanned_To_Level_3"":909, ""Efficient_Scans"":3, ""Highest_Payout"":279383, ""Total_Hyperspace_Distance"":8890, ""Total_Hyperspace_Jumps"":482, ""Greatest_Distance_From_Start"":877.74392687704, ""Time_Played"":310680 }, ""Passengers"":{ ""Passengers_Missions_Accepted"":88, ""Passengers_Missions_Bulk"":1025, ""Passengers_Missions_VIP"":14, ""Passengers_Missions_Delivered"":1039, ""Passengers_Missions_Ejected"":0 }, ""Search_And_Rescue"":{ ""SearchRescue_Traded"":0, ""SearchRescue_Profit"":0, ""SearchRescue_Count"":0 }, ""Crafting"":{ ""Count_Of_Used_Engineers"":2, ""Recipes_Generated"":52, ""Recipes_Generated_Rank_1"":33, ""Recipes_Generated_Rank_2"":11, ""Recipes_Generated_Rank_3"":5, ""Recipes_Generated_Rank_4"":3, ""Recipes_Generated_Rank_5"":0 }, ""Crew"":{  }, ""Multicrew"":{ ""Multicrew_Time_Total"":7083, ""Multicrew_Gunner_Time_Total"":0, ""Multicrew_Fighter_Time_Total"":1769, ""Multicrew_Credits_Total"":104161, ""Multicrew_Fines_Total"":100 }, ""Material_Trader_Stats"":{ ""Trades_Completed"":3, ""Materials_Traded"":56, ""Raw_Materials_Traded"":56, ""Grade_1_Materials_Traded"":56 } }";
+            List<Event> events = JournalMonitor.ParseJournalEntry(line);
+            // Ideally we'd assert that it logs no warnings but that's not easy without mocking the logging framework.
+            // Instead we test for a stanza that comes after the missing TG_ENCOUNTERS stanza.
+            Assert.AreEqual(1, events.Count);
+            StatisticsEvent statisticsEvent = (StatisticsEvent)events[0];
+            Assert.AreEqual(7083, statisticsEvent.multicrew.timetotalseconds);
+        }
+
+        [TestMethod]
+        public void TestReputationWithoutIndependent()
+        {
+            string line = @"{ ""timestamp"":""2019 - 09 - 13T23: 08:20Z"", ""event"":""Reputation"", ""Empire"":18.287001, ""Federation"":75.703102, ""Alliance"":1.179020 }";
+            List<Event> events = JournalMonitor.ParseJournalEntry(line);
+            CommanderReputationEvent reputationEvent = (CommanderReputationEvent)events[0];
+            Assert.AreEqual(18.287001M, reputationEvent.empire);
+            Assert.AreEqual(75.703102M, reputationEvent.federation);
+            Assert.AreEqual(1.179020M, reputationEvent.alliance);
+            Assert.AreEqual(0M, reputationEvent.independent);
+        }
+
+        [TestMethod]
+        public void TestSurfaceSignalsEvent()
+        {
+	        string line = "{ \"timestamp\":\"2019-09-24T02:40:34Z\", \"event\":\"SAASignalsFound\", \"BodyName\":\"HIP 41908 AB 1 c a\", \"SystemAddress\":61461226668, \"BodyID\":11, \"Signals\":[ { \"Type\":\"$SAA_SignalType_Biological;\", \"Type_Localised\":\"Biological\", \"Count\":16 }, { \"Type\":\"$SAA_SignalType_Geological;\", \"Type_Localised\":\"Geological\", \"Count\":17 }, { \"Type\":\"$SAA_SignalType_Human;\", \"Type_Localised\":\"Human\", \"Count\":4 } ] }";
+	        List<Event> events = JournalMonitor.ParseJournalEntry(line);
+	        SurfaceSignalsEvent surfaceSignalEvent = (SurfaceSignalsEvent)events[0];
+	        Assert.AreEqual("HIP 41908 AB 1 c a", surfaceSignalEvent.bodyname);
+	        Assert.AreEqual(61461226668, surfaceSignalEvent.systemAddress);
+	        Assert.AreEqual(3, surfaceSignalEvent.surfacesignals.Count);
+	        Assert.AreEqual("Biological Surface Signal", surfaceSignalEvent.surfacesignals[0].signalSource.invariantName);
+	        Assert.AreEqual(16, surfaceSignalEvent.surfacesignals[0].amount);
+	        Assert.AreEqual("Geological Surface Signal", surfaceSignalEvent.surfacesignals[1].signalSource.invariantName);
+	        Assert.AreEqual(17, surfaceSignalEvent.surfacesignals[1].amount);
+	        Assert.AreEqual("Human Surface Signal", surfaceSignalEvent.surfacesignals[2].signalSource.invariantName);
+	        Assert.AreEqual(4, surfaceSignalEvent.surfacesignals[2].amount);
+        }
+
+        [TestMethod]
+        public void TestTouchdownEventBio()
+        {
+	        string line = "{ \"timestamp\":\"2019 - 09 - 26T06: 42:43Z\", \"event\":\"Touchdown\", \"PlayerControlled\":true, \"Latitude\":-44.165684, \"Longitude\":-123.219307, \"NearestDestination\":\"$SAA_Unknown_Signal:#type=$SAA_SignalType_Biological;:#index=15;\", \"NearestDestination_Localised\":\"Surface signal: Biological (15)\" }";
+	        List<Event> events = JournalMonitor.ParseJournalEntry(line);
+	        TouchdownEvent @event = (TouchdownEvent)events[0];
+	        Assert.IsTrue(@event.playercontrolled);
+	        Assert.AreEqual(-44.165684M, @event.latitude);
+	        Assert.AreEqual(-123.219307M, @event.longitude);
+	        Assert.AreEqual("Biological Surface Signal", @event.nearestDestination.invariantName);
+        }
+
+        [TestMethod]
+        public void TestTouchdownEventGuardian()
+        {
+	        string line = "{ \"timestamp\":\"2019 - 09 - 26T04: 55:43Z\", \"event\":\"Touchdown\", \"PlayerControlled\":true, \"Latitude\":-44.464405, \"Longitude\":-95.072144, \"NearestDestination\":\"$Ancient_Tiny_003:#index=1;\", \"NearestDestination_Localised\":\"Guardian Structure\" }";
+	        List<Event> events = JournalMonitor.ParseJournalEntry(line);
+	        TouchdownEvent @event = (TouchdownEvent)events[0];
+	        Assert.IsTrue(@event.playercontrolled);
+	        Assert.AreEqual(-44.464405M, @event.latitude);
+	        Assert.AreEqual(-95.072144M, @event.longitude);
+	        Assert.AreEqual("Guardian Structure", @event.nearestDestination.invariantName);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace EddiDataDefinitions
             {
 
                 // Module(long EDID, string EDName, long EDDBID, string Name, int Class, string Grade, long Value, int ShipID)
-                // Check https://eddb.io/archive/v5/modules.json (for any undefined EDDBID's or undefined FDevID's) and https://github.com/EDCD/FDevIDs (for any undefined FDevID's)
+                // Check https://eddb.io/archive/v6/modules.json (for any undefined EDDBID's or undefined FDevID's) and https://github.com/EDCD/FDevIDs (for any undefined FDevID's)
 
                 new Module(128049250, "SideWinder_Armour_Grade1", 738, "LightweightAlloy", 1, "I", 0, 128049249),
                 new Module(128049251, "SideWinder_Armour_Grade2", 739, "ReinforcedAlloy", 1, "I", 25600, 128049249),
@@ -1035,6 +1035,8 @@ namespace EddiDataDefinitions
                 new Module(128915983, "Mamba_Armour_Grade3", 1800, "MilitaryGradeComposite", 1, "I", 0, 128915979),
                 new Module(128915984, "Mamba_Armour_Mirrored", 1801, "MirroredSurfaceComposite", 1, "I", 0, 128915979),
                 new Module(128915985, "Mamba_Armour_Reactive", 1802, "ReactiveSurfaceComposite", 1, "I", 0, 128915979),
+                new Module(128935155, "Int_DockingComputer_Advanced", 1810, "AdvancedDockingComputer", 1, "E", 13507),
+                new Module(128932273, "Int_SupercruiseAssist", 1809, "SupercruiseAssist", 1, "E", 9121),
 
                 // Various free modules that show up in SRVs, fighters and training; not used anywhere but note them here so that they do not throw errors when encountered
                 new Module(128666643, "Int_CargoRack_Size2_Class1_free", -1, "CargoRack", 2, "E", 0),
@@ -1140,10 +1142,6 @@ namespace EddiDataDefinitions
                 new Module(899990050, "hpt_guardianplasma_fixed_gdn_fighter", -1, "GuardianPlasmaCharger", 1, "I", 0, -1),
                 new Module(899990050, "hpt_guardianshard_fixed_gdn_fighter", -1, "ShardCannon", 1, "I", 0, -1),
 
-                // Needs EDDB ID
-                new Module(128935155, "Int_DockingComputer_Advanced", -1, "AdvancedDockingComputer", 1, "E", 13507),
-                new Module(128932273, "Int_SupercruiseAssist", -1, "SupercruiseAssist", 1, "E", 9121),
-
                 // Needs pricing
                 new Module(128064258, "Int_ShieldGenerator_Size1_Class1", 1804, "ShieldGenerator", 1, "E", 0),
                 new Module(128064259, "Int_ShieldGenerator_Size1_Class2", 1805, "ShieldGenerator", 1, "D", 0),
@@ -1166,10 +1164,10 @@ namespace EddiDataDefinitions
                 new Module(128915720, "Hpt_mrascanner_Size0_Class3", 1795, "PulseWave", 0, "C", 0),
                 new Module(128915721, "Hpt_mrascanner_Size0_Class4", 1796, "PulseWave", 0, "B", 0),
                 new Module(128915722, "Hpt_mrascanner_Size0_Class5", 1797, "PulseWave", 0, "A", 0),
-
-                // Needs EDDB ID and pricing
-                new Module(128935980, "Hpt_MultiCannon_Fixed_Medium_Advanced", -1, "AdvancedMultiCannon", 2, "E", 0, ModuleMount.Fixed),
-                new Module(128935981, "Hpt_MultiCannon_Fixed_Small_Advanced", -1, "AdvancedMultiCannon", 1, "F", 0, ModuleMount.Fixed),
+                new Module(128935980, "Hpt_MultiCannon_Fixed_Medium_Advanced", 1811, "AdvancedMultiCannon", 2, "E", 0, ModuleMount.Fixed),
+                new Module(128935981, "Hpt_MultiCannon_Fixed_Small_Advanced", 1812, "AdvancedMultiCannon", 1, "F", 0, ModuleMount.Fixed),
+                new Module(128935982, "Hpt_DumbfireMissileRack_Fixed_Small_Advanced", 1813, "AdvancedMissileRack", 1, "B", 0, ModuleMount.Fixed),
+                new Module(128935983, "Hpt_DumbfireMissileRack_Fixed_Medium_Advanced", 1814, "AdvancedMissileRack", 2, "B", 0, ModuleMount.Fixed),
             };
         }
 
@@ -1196,7 +1194,6 @@ namespace EddiDataDefinitions
             "Hpt_MultiCannon_Fixed_Small_Strong", // Enforcer cannon 
             "Hpt_PulseLaser_Fixed_Medium_Disruptor", // Disruptor
         };
-
         public bool IsPowerPlay()
         {
             return PowerPlayModules.Contains(this.edname);

@@ -47,6 +47,7 @@ Any values might be missing, depending on EDDI's configuration.
     - `squadronfaction` the faction within the squadron system to which the commander's squadron is aligned
     - `friends` the commander's friends observed during the play session (this is a list of Friend objects)
     - `engineers` the commander's relations with engineers, including any ranks or progression recorded during the play session (this is a list of Engineer objects)
+    - `power` (if pledged) the power which the commander serves
 
 ### Engineer
 
@@ -266,6 +267,33 @@ Details of ship target data, within the `shiptargets` object.
 
 ---
 
+## Inara
+
+Details of any available commander records from https://inara.cz, within the `inaracmdr` object.
+Some values may be missing, depending on the completeness of the records and on the commander's sharing settings on https://inara.cz.
+
+    - `username` The commander's Inara username
+    - `commandername` The commander name
+    - `commanderranks` The commander's last reported ranks (this is a list of `inaracmdrranks` objects)
+    - `preferredallegiance` The commander's last reported preferred allegiance
+    - `preferredpower` The commander's last reported preferred allegiance
+    - `squadron` The commander's last reported Inara squadron (this is an `inaracmdrsquadron` object)
+    - `preferredrole` The commander's last reported in-game role
+    - `url` The url of the commander's profile on https://inara.cz
+
+### InaraCmdrRanks
+    - `rank` The name of the rank
+    - `rankvalue` The rank as an integer value    
+    - `progress` The process which has been made toward's the commander's next advancement in the rank
+
+### InaraCmdrSquadron
+    - `name` The commander's last reported squadron name
+    - `memberscount` The commander's squadron's last reported membership count
+    - `squadronrank` The commander's last reported rank with their Inara squadron
+    - `url` The url of the commander's squadron's profile on https://inara.ca
+
+---
+
 ## Ship
 
 Information about your current ship is available under the `ship` object.
@@ -432,6 +460,8 @@ Any values might be missing, depending on EDDI's configuration and the informati
     - `isgreen` true if bodies in this starsystem contain all elements required for FSD synthesis
     - `isgold` true if bodies in this starsystem contain all elements available from surface prospecting
     - `estimatedvalue` the estimated exploration value of the starsystem (includes bonuses for fully scanning and mapping)
+    - `totalbodies` the total number of discoverable bodies within the system (only available after a discovery scan)
+    - `scoopable` true if a fuel scoop equipped ship can refuel at the main star in this starsystem
 
 #### Last starsystem
 
@@ -445,7 +475,7 @@ Values are the same as for the current starsystem.
 
 Information about your next targeted starsystem is available under the `nextsystem` object. When you begin a jump to a targeted system, the information is transferred to the current `system` object.
 
-Any values might be missing, depending on EDDI's configuration and the information avaialable about the system.
+Any values might be missing, depending on EDDI's configuration and the information available about the system.
 
 Values are the same as for the current starsystem.
 
@@ -455,7 +485,11 @@ Information about your destination starsystem is available under the `destinatio
 
 Any values might be missing, depending on EDDI's configuration and the information available about the system.
 
-Values are the same as for the current starsystem.
+Values are the same as for the current starsystem. 
+
+When a destination is set, the following additional top level object is made available:
+
+    `destinationdistance` the distance in LY from the current starsystem to the commander's destination starsystem
 
 #### Home starsystem
 
@@ -528,6 +562,7 @@ In addition, stars have the following data:
     - `estimatedhabzoneouter` The estimated outer radius of the habitable zone of the star, in light seconds, not considering other stars in the system
     - `ageprobability` the cumulative probability describing the star's age, relative to other stars of the same stellar class.
     - `absolutemagnitudeprobability` the cumulative probability describing the star's absolute magnitude, relative to other stars of the same stellar class.
+    - `scoopable` true if a fuel scoop equipped ship can refuel at this star
 
 Planets and moons have the following data:
 
@@ -711,6 +746,7 @@ Any values might be missing, depending on EDDI's configuration.
     - `longitude` a decimal value indicating the ship's current longitude (if near a surface)
     - `altitude` a decimal value indicating the ship's current altitude (if in flight near a surface)
     - `heading` a decimal value indicating the ship's current heading (if near a surface)
+    - `slope` a decimal value indicating the ship's current slope relative to the horizon (if near a surface)
     - `analysis_mode` a boolean value indicating whether the ship's HUD is currently in Analysis Mode
     - `night_vision` a boolean value indicating whether night vision is currently active
     - `fuel` a decimal value indicating the ship's current fuel (including fuel in the active fuel reservoir)
@@ -728,6 +764,8 @@ Any values might be missing, depending on EDDI's configuration.
     - `bodyname` the name of the current body (if landed or in an srv)
     - `planetradius` the radius of the current body (if landed or in an srv)
     - `altitude_from_average_radius` true if the altitude is computed relative to the average radius (which is used at higher altitudes) rather than surface directly below the srv
+    - `hyperspace` true if jumping between star systems
+    - `srv_highbeam` true if the lights in your SRV are set to the high beam mode.
 
 ---
 ## Traffic

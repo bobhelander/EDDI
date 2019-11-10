@@ -20,7 +20,6 @@ namespace EddiDataDefinitions
             var Contacts = new StationService("Contacts");
             var Exploration = new StationService("Exploration");
             var Initiatives = new StationService("Initiatives");
-            var InterstellarFactorsContact = new StationService("InterstellarFactorsContact");
             var Missions = new StationService("Missions");
             var Outfitting = new StationService("Outfitting");
             var CrewLounge = new StationService("CrewLounge");
@@ -41,6 +40,7 @@ namespace EddiDataDefinitions
             var TechBroker = new StationService("TechBroker");
             var MaterialTrader = new StationService("MaterialTrader");
             var StationMenu = new StationService("StationMenu");
+            var Shop = new StationService("Shop");
         }
 
         public static readonly StationService None;

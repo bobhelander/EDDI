@@ -35,7 +35,7 @@ namespace EddiStatusMonitor
 
         public StatusMonitor()
         {
-            Logging.Info("Initialised " + MonitorName() + " " + MonitorVersion());
+            Logging.Info($"Initialized {MonitorName()}");
         }
 
         public string MonitorName()
@@ -46,11 +46,6 @@ namespace EddiStatusMonitor
         public string LocalizedMonitorName()
         {
             return "Status monitor";
-        }
-
-        public string MonitorVersion()
-        {
-            return "1.0.0";
         }
 
         public string MonitorDescription()
@@ -77,7 +72,7 @@ namespace EddiStatusMonitor
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")] // this usage is perfectly correct
         public void start()
         {
-            if (Directory == null || Directory.Trim() == "")
+            if (string.IsNullOrWhiteSpace(Directory))
             {
                 return;
             }
@@ -180,20 +175,14 @@ namespace EddiStatusMonitor
                     IDictionary<string, object> data = Deserializtion.DeserializeData(line);
 
                     // Every status event has a timestamp field
-                    if (data.ContainsKey("timestamp"))
+                    status.timestamp = DateTime.UtcNow;
+                    try
                     {
-                        if (data["timestamp"] is DateTime)
-                        {
-                            status.timestamp = ((DateTime)data["timestamp"]).ToUniversalTime();
-                        }
-                        else
-                        {
-                            status.timestamp = DateTime.Parse(JsonParsing.getString(data, "timestamp")).ToUniversalTime();
-                        }
+                        status.timestamp = JsonParsing.getDateTime("timestamp", data);
                     }
-                    else
+                    catch
                     {
-                        Logging.Warn("Status event without timestamp; using current time");
+                        Logging.Warn("Status without timestamp; using current time");
                     }
 
                     status.flags = (Status.Flags)(JsonParsing.getOptionalLong(data, "Flags") ?? 0);
@@ -293,6 +282,7 @@ namespace EddiStatusMonitor
 
                     // Calculated data
                     SetFuelExtras(status);
+                    SetSlope(status);
 
                     return status;
                 }
@@ -302,7 +292,7 @@ namespace EddiStatusMonitor
                 Logging.Warn("Failed to parse Status.json line: " + ex.ToString());
                 Logging.Error("", ex);
             }
-            return status = null;
+            return null;
         }
 
         public void handleStatus(Status thisStatus)
@@ -321,17 +311,25 @@ namespace EddiStatusMonitor
                 // Update environment and vehicle information
                 if (EDDI.Instance.Environment != Constants.ENVIRONMENT_WITCH_SPACE)
                 {
-                    if (thisStatus.supercruise)
+                    if (thisStatus.hyperspace)
+                    {
+                        EDDI.Instance.Environment = Constants.ENVIRONMENT_WITCH_SPACE;
+                        gliding = false;
+                    }
+                    else if (thisStatus.supercruise)
                     {
                         EDDI.Instance.Environment = Constants.ENVIRONMENT_SUPERCRUISE;
+                        gliding = false;
                     }
                     else if (thisStatus.docked)
                     {
                         EDDI.Instance.Environment = Constants.ENVIRONMENT_DOCKED;
+                        gliding = false;
                     }
                     else if (thisStatus.landed)
                     {
                         EDDI.Instance.Environment = Constants.ENVIRONMENT_LANDED;
+                        gliding = false;
                     }
                     else
                     {
@@ -415,9 +413,12 @@ namespace EddiStatusMonitor
                     if (!gliding && lastEnteredNormalSpaceEvent != null)
                     {
                         // We're not already gliding and we have data from a prior `EnteredNormalSpace` event
-                        if (currentStatus.fsd_status == "ready" && currentStatus.altitude < 25000 && currentStatus.altitude < lastStatus.altitude)
+                        if (currentStatus.fsd_status == "ready" 
+                            && currentStatus.slope >= -60 && currentStatus.slope <= -5
+                            && currentStatus.altitude < 100000
+                            && currentStatus.altitude < lastStatus.altitude)
                         {
-                            // The FSD status is `ready`, altitude is less than 25000 meters, and we are dropping
+                            // The FSD status is `ready`, altitude is less than 100000 meters, and we are dropping
                             gliding = true;
                             EnteredNormalSpaceEvent theEvent = lastEnteredNormalSpaceEvent;
                             EDDI.Instance.enqueueEvent(new GlideEvent(DateTime.UtcNow, gliding, theEvent.systemname, theEvent.systemAddress, theEvent.bodyname, theEvent.bodyType) { fromLoad = theEvent.fromLoad });
@@ -570,6 +571,36 @@ namespace EddiStatusMonitor
                 fuel_seconds = (fuelPerSecond is null || fuelPerSecond == 0) ? null : (int?)(srvFuelTankCapacity / fuelPerSecond);
             }
             return; // At present, fighters do not appear to consume fuel.
+        }
+
+        private void SetSlope(Status status)
+        {
+            status.slope = null;
+            if (lastStatus?.planetradius != null && lastStatus?.altitude != null && lastStatus?.latitude != null && lastStatus?.longitude != null)
+            {
+                if (status.planetradius != null && status.altitude != null && status.latitude != null && status.longitude != null)
+                {
+                    double square(double x) => x * x;
+
+                    double radius = (double)status.planetradius / 1000;
+                    double deltaAlt = (double)(status.altitude - lastStatus.altitude) / 1000;
+
+                    // Convert latitude & longitude to radians
+                    double currentLat = (double)status.latitude * Math.PI / 180;
+                    double lastLat = (double)lastStatus.latitude * Math.PI / 180;
+                    double deltaLat = currentLat - lastLat;
+                    double deltaLong = (double)(status.longitude - lastStatus.longitude) * Math.PI / 180;
+
+                    // Calculate distance traveled using Law of Haversines
+                    double a = square(Math.Sin(deltaLat / 2)) + Math.Cos(currentLat) * Math.Cos(lastLat) * square(Math.Sin(deltaLong / 2));
+                    double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+                    double distance = c * radius;
+
+                    // Calculate the slope angle
+                    double slope = Math.Atan2(deltaAlt, distance) * 180 / Math.PI;
+                    status.slope = Math.Round((decimal)slope, 1);
+                }
+            }
         }
     }
 }

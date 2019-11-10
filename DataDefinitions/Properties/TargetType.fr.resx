@@ -147,4 +147,9 @@
   <data name="Trader" xml:space="preserve">
     <value>Commerçant</value>
   </data>
+  
+  <data name="DeserterASS" xml:space="preserve">
+    <value>Déserteur</value>
+    <comment>Assassination mission target: Deserter</comment>
+  </data>
 </root>

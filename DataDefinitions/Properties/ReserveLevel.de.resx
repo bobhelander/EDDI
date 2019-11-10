@@ -126,7 +126,7 @@
     <comment>No reserves (no rings present)</comment>
   </data>
   <data name="CommonResources" xml:space="preserve">
-    <value>Mittlere</value>
+    <value>Gewöhnliche</value>
     <comment>Common reserves</comment>
   </data>
   <data name="MajorResources" xml:space="preserve">
@@ -134,7 +134,7 @@
     <comment>Major reserves</comment>
   </data>
   <data name="PristineResources" xml:space="preserve">
-    <value>Unverbrauchte</value>
+    <value>Unberührte</value>
     <comment>Pristine reserves</comment>
   </data>
   <data name="DepletedResources" xml:space="preserve">

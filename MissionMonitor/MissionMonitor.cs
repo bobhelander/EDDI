@@ -1,6 +1,7 @@
 using Eddi;
 using EddiDataDefinitions;
 using EddiDataProviderService;
+using EddiStarMapService;
 using EddiEvents;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,6 +35,19 @@ namespace EddiMissionMonitor
         public string missionsRouteList;
         public decimal missionsRouteDistance;
 
+        private readonly List<string> noExpiryAfterComplete = new List<string> {
+            "assassinate",
+            "assassinatewing",
+            "disable",
+            "disablewing",
+            "massacre",
+            "massacrethargoid",
+            "massacrewing"
+        };
+
+        private readonly IEdsmService edsmService;
+        private readonly DataProviderService dataProviderService;
+
         private static readonly object missionsLock = new object();
         public event EventHandler MissionUpdatedEvent;
 
@@ -47,11 +61,6 @@ namespace EddiMissionMonitor
             return Properties.MissionMonitor.mission_monitor_name;
         }
 
-        public string MonitorVersion()
-        {
-            return "1.0.0";
-        }
-
         public string MonitorDescription()
         {
             return Properties.MissionMonitor.mission_monitor_desc;
@@ -62,8 +71,13 @@ namespace EddiMissionMonitor
             return true;
         }
 
-        public MissionMonitor()
+        public MissionMonitor() : this(null)
+        { }
+
+        public MissionMonitor(IEdsmService edsmService)
         {
+            this.edsmService = edsmService ?? new StarMapService();
+            dataProviderService = new DataProviderService(edsmService);
             missions = new ObservableCollection<Mission>();
             BindingOperations.CollectionRegistering += Missions_CollectionRegistering;
             initializeMissionMonitor();
@@ -72,7 +86,7 @@ namespace EddiMissionMonitor
         public void initializeMissionMonitor(MissionMonitorConfiguration configuration = null)
         {
             readMissions(configuration);
-            Logging.Info("Initialised " + MonitorName() + " " + MonitorVersion());
+            Logging.Info($"Initialized {MonitorName()}");
         }
 
         private void Missions_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
@@ -106,7 +120,7 @@ namespace EddiMissionMonitor
         public void Reload()
         {
             readMissions();
-            Logging.Info("Reloaded " + MonitorName() + " " + MonitorVersion());
+            Logging.Info($"Reloaded {MonitorName()}");
 
         }
 
@@ -121,12 +135,22 @@ namespace EddiMissionMonitor
                 {
                     missionsList = missions.ToList();
                 }
+
                 if (missionsList != null)
                 {
                     foreach (Mission mission in missionsList)
                     {
                         if (mission.expiry != null && mission.statusEDName != "Failed")
                         {
+                            // Check for mission types which have no expiry after requiremensts completed
+                            string type = mission.typeEDName.ToLowerInvariant();
+                            if (mission.statusEDName == "Complete" && noExpiryAfterComplete.Contains(type))
+                            {
+                                mission.timeremaining = String.Empty;
+                                continue;
+                            }
+
+                            // Build the 'time remaining' notification
                             TimeSpan span = (DateTime)mission.expiry - DateTime.UtcNow;
                             if (span.Days > 6)
                             {
@@ -140,6 +164,7 @@ namespace EddiMissionMonitor
                             }
                             mission.timeremaining += span.Hours.ToString() + "H " + span.Minutes.ToString() + "MIN";
 
+                            // Generate 'Expired' and 'Warning' events when conditions met
                             if (mission.expiry < DateTime.UtcNow)
                             {
                                 EDDI.Instance.enqueueEvent(new MissionExpiredEvent(DateTime.UtcNow, mission.missionid, mission.name));
@@ -338,10 +363,13 @@ namespace EddiMissionMonitor
 
                                 if (missionEntry.statusEDName == "Active" && missionEntry.destinationsystem == missionEntry.originsystem)
                                 {
-                                    switch (missionEntry.typeEDName)
+                                    string type = missionEntry.typeEDName.ToLowerInvariant();
+                                    switch (type)
                                     {
                                         case "assassinate":
+                                        case "assassinatewing":
                                         case "disable":
+                                        case "disablewing":
                                         case "hack":
                                         case "longdistanceexpedition":
                                         case "passengervip":
@@ -359,11 +387,11 @@ namespace EddiMissionMonitor
                                 }
                             }
                             break;
-                        case "Failed":
+                        default:
                             {
-                                if (missionEntry.statusDef.edname != "Failed")
+                                if (missionEntry.statusDef != mission.statusDef)
                                 {
-                                    missionEntry.statusDef = MissionStatus.FromEDName("Failed");
+                                    missionEntry.statusDef = mission.statusDef;
                                     update = true;
                                 }
                             }
@@ -1064,7 +1092,7 @@ namespace EddiMissionMonitor
                 {
                     systems.Add(homeSystem);
                 }
-                List<StarSystem> starsystems = DataProviderService.GetSystemsData(systems.ToArray(), true, false, false, false, false);
+                List<StarSystem> starsystems = dataProviderService.GetSystemsData(systems.ToArray(), true, false, false, false, false);
                 decimal[][] distMatrix = new decimal[systems.Count][];
                 for (int i = 0; i < systems.Count; i++)
                 {
@@ -1272,13 +1300,13 @@ namespace EddiMissionMonitor
 
         public decimal CalculateDistance(StarSystem curr, StarSystem dest)
         {
+            double square(double x) => x * x;
             decimal distance = 0;
             if (curr?.x != null && dest?.x != null)
             {
-                distance = (decimal)Math.Round(Math.Sqrt(Math.Pow((double)(curr.x - dest.x), 2)
-                    + Math.Pow((double)(curr.y - dest.y), 2)
-                    + Math.Pow((double)(curr.z - dest.z), 2)), 2);
-
+                distance = (decimal)Math.Round(Math.Sqrt(square((double)(curr.x - dest.x))
+                            + square((double)(curr.y - dest.y))
+                            + square((double)(curr.z - dest.z))), 2);
             }
             return distance;
         }
@@ -1293,7 +1321,7 @@ namespace EddiMissionMonitor
                 StarSystem curr = EDDI.Instance?.CurrentStarSystem;
 
                 // Get all the route coordinates from EDSM in one request
-                List<StarSystem> starsystems = DataProviderService.GetSystemsData(route.ToArray(), true, false, false, false, false);
+                List<StarSystem> starsystems = dataProviderService.GetSystemsData(route.ToArray(), true, false, false, false, false);
 
                 // Get distance to the next system
                 StarSystem dest = starsystems.Find(s => s.systemname == route[0]);

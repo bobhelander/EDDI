@@ -14,6 +14,8 @@ namespace EddiEdsmResponder
     {
         private Thread updateThread;
         private List<string> ignoredEvents = new List<string>();
+        private readonly IEdsmService edsmService;
+        private readonly DataProviderService dataProviderService;
 
         public string ResponderName()
         {
@@ -25,26 +27,26 @@ namespace EddiEdsmResponder
             return Properties.EDSMResources.name;
         }
 
-        public string ResponderVersion()
-        {
-            return "1.0.0";
-        }
-
         public string ResponderDescription()
         {
             return Properties.EDSMResources.desc;
         }
 
-        public EDSMResponder()
+        public EDSMResponder() : this(new StarMapService())
+        {}
+
+        public EDSMResponder(IEdsmService edsmService)
         {
-            Logging.Info("Initialised " + ResponderName() + " " + ResponderVersion());
+            this.edsmService = edsmService;
+            dataProviderService = new DataProviderService(edsmService);
+            Logging.Info($"Initialized {ResponderName()}");
         }
 
         public bool Start()
         {
             Reload();
 
-            return StarMapService.Instance != null;
+            return edsmService != null;
         }
 
         public void Stop()
@@ -58,18 +60,24 @@ namespace EddiEdsmResponder
             // Set up the star map service
             if (ignoredEvents == null)
             {
-                ignoredEvents = StarMapService.Instance?.getIgnoredEvents();
+                ignoredEvents = edsmService?.getIgnoredEvents();
             }
 
-            if (StarMapService.Instance != null && updateThread == null)
+            if (edsmService != null)
             {
-                // Spin off a thread to download & sync flight logs & system comments from EDSM in the background 
-                updateThread = new Thread(() => DataProviderService.syncFromStarMapService(StarMapConfiguration.FromFile()?.lastSync))
+                // Renew our credentials for the EDSM API
+                edsmService.SetEdsmCredentials();
+
+                if (updateThread == null)
                 {
-                    IsBackground = true,
-                    Name = "EDSM updater"
-                };
-                updateThread.Start();
+                    // Spin off a thread to download & sync flight logs & system comments from EDSM in the background 
+                    updateThread = new Thread(() => dataProviderService.syncFromStarMapService(StarMapConfiguration.FromFile()?.lastSync))
+                    {
+                        IsBackground = true,
+                        Name = "EDSM updater"
+                    };
+                    updateThread.Start();
+                }
             }
         }
 
@@ -87,13 +95,13 @@ namespace EddiEdsmResponder
                 return;
             }
 
-            if (EDDI.Instance.inBeta)
+            if (EDDI.Instance.gameIsBeta)
             {
                 // We don't send data whilst in beta
                 return;
             }
 
-            if (StarMapService.Instance != null)
+            if (edsmService != null)
             {
                 /// Retrieve applicable transient game state info (metadata) 
                 /// for the event and send the event with transient info to EDSM
@@ -106,9 +114,9 @@ namespace EddiEdsmResponder
                 {
                     Logging.Error("Failed to prepare event meta-data for submittal to EDSM", ex);
                 }
-                if (eventData != null && !EDDI.Instance.inBeta)
+                if (eventData != null && !EDDI.Instance.gameIsBeta)
                 {
-                    StarMapService.Instance.sendEvent(eventData);
+                    edsmService.sendEvent(eventData);
                 }
             }
         }

@@ -224,4 +224,10 @@
   <data name="localizedAnd" xml:space="preserve">
     <value>and</value>
   </data>
+  <data name="reset_script" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="reset_script_message" xml:space="preserve">
+    <value>スクリプト "{0}" をリセットしますか？</value>
+  </data>
 </root>
