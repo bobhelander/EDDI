@@ -65,6 +65,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="JoystickActionEvent.cs" />
+    <Compile Include="JoystickCommandEvent.cs" />
     <Compile Include="CommanderReputationEvent.cs" />
     <Compile Include="PowerplayEvent.cs" />
     <Compile Include="CommanderLoadingEvent.cs" />
