@@ -559,14 +559,14 @@ namespace EddiVoiceAttackResponder
                     vaProxy.SetText(prefix + " model", ship?.model);
                     vaProxy.SetText(prefix + " model (spoken)", ship?.SpokenModel());
 
-                    if (((ShipMonitor)EDDI.Instance.ObtainMonitor("Ship monitor")).GetCurrentShip() != null && EDDI.Instance.Cmdr != null && EDDI.Instance.Cmdr.name != null)
+                    if (((ShipMonitor)EDDI.Instance.ObtainMonitor("Ship monitor")).GetCurrentShip() != null && EDDI.Instance.Cmdr?.name != null)
                     {
                         vaProxy.SetText(prefix + " callsign", ship == null ? null : ship.manufacturer + " " + EDDI.Instance.Cmdr.name.Substring(0, 3).ToUpperInvariant());
                         vaProxy.SetText(prefix + " callsign (spoken)", ship == null ? null : ship.SpokenManufacturer() + " " + Translations.ICAO(EDDI.Instance.Cmdr.name.Substring(0, 3).ToUpperInvariant()));
                     }
 
                     vaProxy.SetText(prefix + " name", ship?.name);
-                    vaProxy.SetText(prefix + " name (spoken)", ship?.phoneticname);
+                    vaProxy.SetText(prefix + " name (spoken)", ship?.phoneticName);
                     vaProxy.SetText(prefix + " ident", ship?.ident);
                     vaProxy.SetText(prefix + " ident (spoken)", Translations.ICAO(ship?.ident, false));
                     vaProxy.SetText(prefix + " role", ship?.Role?.localizedName);
@@ -826,15 +826,9 @@ namespace EddiVoiceAttackResponder
         private static void setBodyValues(Body body, string prefix, dynamic vaProxy)
         {
             Logging.Debug("Setting body information (" + prefix + ")");
-            if (body?.bodyType?.invariantName == "Star") { vaProxy.SetText(prefix + " stellar class", body?.stellarclass); }
-            if (body?.age == null)
-            {
-                vaProxy.SetDecimal(prefix + " age", null);
-            }
-            else
-            {
-                vaProxy.SetDecimal(prefix + " age", (decimal)(long)body.age);
-            }
+            vaProxy.SetText(prefix + " name", body?.bodyname);
+            vaProxy.SetText(prefix + " stellar class", body?.stellarclass);
+            vaProxy.SetDecimal(prefix + " age", body?.age);
             Logging.Debug("Set body information (" + prefix + ")");
         }
 

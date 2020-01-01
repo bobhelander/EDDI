@@ -50,7 +50,7 @@ namespace EddiSpeechService
         private static readonly Dictionary<string, string> STAR_SYSTEM_FIXES = new Dictionary<string, string>()
         {
             { "VESPER-M4", "Vesper M 4" }, // Stop Vesper being treated as a sector
-            { "Sagittarius A*", "Sagittarius A- Star" }, // Allow the * to be parsed out
+            { "Sagittarius A*", "Sagittarius " + sayAsLettersOrNumbers("A") + " Star" }, // Allow the * to be parsed out
         };
 
         // Fixes to avoid issues with pronunciation of station model names
@@ -646,7 +646,7 @@ namespace EddiSpeechService
             return String.Join(" ", elements).Trim();
         }
 
-        private static string sayAsLettersOrNumbers(string part)
+        public static string sayAsLettersOrNumbers(string part)
         {
             if (int.TryParse(part, out _))
             {
@@ -769,7 +769,7 @@ namespace EddiSpeechService
                         return Properties.Phrases.nearly + " " + minus + (number + 1) + order;
                 }
             }
-            // Describe (less precisely) decimal values for more complex numbers
+            // Describe (less precisely) decimal values for more complex numbers    
             else
             {
                 if (nextDigit < 2)

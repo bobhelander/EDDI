@@ -73,6 +73,12 @@ Common usage of this is to provide further information about your rating, for ex
 
     You have been promoted {CombatRatingDetails("Expert").rank} times.
 
+### CommanderName()
+
+This function will provide the name of your commander.
+
+If you have set up a phonetic name for your commander it will return that, otherwise if your commander name has been set it will return that. The phonetic name uses SSML tags.
+
 ### CommodityMarketDetails()
 
 This function will provide full information for a commodity, including information that is specific to a market, given the commodity name.
@@ -385,7 +391,7 @@ This function will produce a destination/route for valid mission destinations, d
   * `update` Update to the next mission route destination, once all 
 missions in current system are completed.
 
-Upon success of the query, a 'Missions route' event is triggered, providing a following event data:
+Upon success of the query, a 'Route details' event is triggered, providing a following event data:
 
   * `routetype` Type of route query (see above).
   * `destination` Destination system.
@@ -469,9 +475,9 @@ If you have not set up a name for your ship it will just return "your ship".
 
 ### Spacialise()
 
-This function will add spaces between letters in a string & convert to uppercase, in order to allow letters in a string to be pronounced individually.
+This function will allow letters and numbers in a string to be pronounced individually. If SSML is enabled, this function will render the text using SSML. If not, it will add spaces between letters in a string & convert to uppercase to assist the voice with achieving the proper pronunciation. 
 
-Spacialise() takes one argument: the number to Spacialise.
+Spacialise() takes one argument: the string of characters to Spacialise.
 
 Common usage of this is to provide a more human-sounding reading of a string of letters that are not a part of known word:
 
